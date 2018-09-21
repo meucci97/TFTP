@@ -24,6 +24,9 @@ public class Client extends EnvoieRecevoir{
 
     private final static int PACKET_SIZE = 516;
 
+    /**
+     * Initialize client to send or receive Data
+     */
     public void runClient(){
 
         Scanner sc = new Scanner(System.in);
@@ -47,7 +50,7 @@ public class Client extends EnvoieRecevoir{
             e.printStackTrace();
         }
         closeSocket(ECOUTE);
-        
+
 /*
             boolean follow = true;
         try {
@@ -90,6 +93,14 @@ public class Client extends EnvoieRecevoir{
         return v;
     }
 
+    /**
+     *
+     * @param fileName File name in the local directory
+     * @param distFileName File Name in the Distant repository
+     * @param addrServ Ip addresse of the server
+     * @return
+     * @throws IOException
+     */
     public int receiveFile(String fileName, String distFileName, String  addrServ) throws IOException {
         ByteArrayOutputStream byteOutOS = new ByteArrayOutputStream();
         int block = 1;
@@ -114,10 +125,11 @@ public class Client extends EnvoieRecevoir{
 
                 //STEP 2.2: send ACK to TFTP server for received packet
                 this.send(dp.getAddress(), dp.getPort(),sendAcknowledgment(blockNumber));
+
+                System.out.println(new String(dp.getData(), StandardCharsets.UTF_8));
             }
 
         }while(!isLastPacket(dp));
-        System.out.println(byteOutOS);
 
         try(OutputStream outputStream = new FileOutputStream(fileName)) {
             byteOutOS.writeTo(outputStream);
@@ -126,6 +138,13 @@ public class Client extends EnvoieRecevoir{
         return 0;
     }
 
+    /**
+     *
+     * @param opCode TFTP Code
+     * @param fileName File name located in Server
+     * @param mode
+     * @return
+     */
     private byte[] createRequest(final byte opCode, final String fileName,final String mode) {
 
         byte zeroByte = 0;
@@ -151,15 +170,21 @@ public class Client extends EnvoieRecevoir{
         return rrqByteArray;
     }
 
+    /**
+     *
+     * @param blockNumber get the block number to compose the Acknowledgment message
+     * @return
+     */
     private byte[] sendAcknowledgment(byte[] blockNumber) {
-
         byte[] ACK = { 0, CODE_ACK, blockNumber[0], blockNumber[1] };
-
         return ACK;
-
     }
 
-
+    /**
+     *
+     * @param datagramPacket datagramPacket that has the information
+     * @return
+     */
     private boolean isLastPacket(DatagramPacket datagramPacket) {
         if (datagramPacket.getLength() < 512)
             return true;
@@ -169,8 +194,7 @@ public class Client extends EnvoieRecevoir{
 
     private void receivedError(DatagramPacket dp,byte[] data ) {
         String errorCode = new String(data, 3, 1);
-        String errorText = new String(data, 4,
-                dp.getLength() - 4);
+        String errorText = new String(data, 4, dp.getLength() - 4);
         System.err.println("Error: " + errorCode + " " + errorText);
     }
 
