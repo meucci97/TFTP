@@ -8,8 +8,6 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Client extends EnvoieRecevoir{
 
@@ -27,7 +25,7 @@ public class Client extends EnvoieRecevoir{
     /**
      * Initialize client to send or receive Data
      */
-    public void runClient(){
+    public void runClient(String local, String distant){
 
         Scanner sc = new Scanner(System.in);
         DatagramPacket dp;
@@ -37,15 +35,15 @@ public class Client extends EnvoieRecevoir{
         System.out.println("Mon port d'écoute: "+ECOUTE);
         initSocket(ECOUTE);
 
-        System.out.print("Type d'opération (envoyer=1, recevoir=0) : ");
-        message = sc.nextLine();
-        System.out.print("Nom fichier distant: ");
-        String distFileName = sc.nextLine();
-        System.out.print("Nom du fichier local: ");
-        String fileName = sc.nextLine();
+        //System.out.print("Type d'opération (envoyer=1, recevoir=0) : ");
+        //message = sc.nextLine();
+        //System.out.print("Nom fichier distant: ");
+        //String distFileName = sc.nextLine();
+        //System.out.print("Nom du fichier local: ");
+        //String fileName = sc.nextLine();
 
         try {
-            receiveFile(fileName,distFileName,IP);
+            receiveFile(local, distant, IP);
         } catch (IOException e) {
             e.printStackTrace();
         }
