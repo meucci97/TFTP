@@ -50,7 +50,7 @@ public class Main extends Application {
         submit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                Client monClient= new Client();
+                Client monClient = new Client();
                 monClient.runClient(fichierLocal.getText(), fichierDistant.getText());
             }
         });
@@ -63,7 +63,7 @@ public class Main extends Application {
         receive.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                Client monClient= new Client();
+                Client monClient = new Client();
                 monClient.runClient(fichierLocal.getText(), fichierDistant.getText());
             }
         });

@@ -6,12 +6,11 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 import java.util.Vector;
 
-public class Client extends EnvoieRecevoir{
+public class Client extends EnvoieRecevoir {
 
-    public static final String IP="127.0.0.1";
+    private static final String IP = "127.0.0.1";
     private Vector<Integer> myPort;
     private int ECOUTE;
 
@@ -25,22 +24,12 @@ public class Client extends EnvoieRecevoir{
     /**
      * Initialize client to send or receive Data
      */
-    public void runClient(String local, String distant){
+    public void runClient(String local, String distant) {
 
-        Scanner sc = new Scanner(System.in);
-        DatagramPacket dp;
-        String message;
         myPort = getAvailablePorts(4001, 5000);
         ECOUTE = myPort.firstElement();
-        System.out.println("Mon port d'écoute: "+ECOUTE);
+        System.out.println("Mon port d'écoute: " + ECOUTE);
         initSocket(ECOUTE);
-
-        //System.out.print("Type d'opération (envoyer=1, recevoir=0) : ");
-        //message = sc.nextLine();
-        //System.out.print("Nom fichier distant: ");
-        //String distFileName = sc.nextLine();
-        //System.out.print("Nom du fichier local: ");
-        //String fileName = sc.nextLine();
 
         try {
             receiveFile(local, distant, IP);
@@ -76,7 +65,7 @@ public class Client extends EnvoieRecevoir{
         }*/
     }
 
-    public static Vector getAvailablePorts(int start, int end) {
+    private static Vector getAvailablePorts(int start, int end) {
         DatagramSocket d;
         Vector<Integer> v = new Vector<>();
         for (int i = start; i <= end; i++) {
@@ -92,44 +81,43 @@ public class Client extends EnvoieRecevoir{
     }
 
     /**
-     *
-     * @param fileName File name in the local directory
+     * @param fileName     File name in the local directory
      * @param distFileName File Name in the Distant repository
-     * @param addrServ Ip addresse of the server
+     * @param addrServ     Ip addresse of the server
      * @return
      * @throws IOException
      */
-    public int receiveFile(String fileName, String distFileName, String  addrServ) throws IOException {
+    public int receiveFile(String fileName, String distFileName, String addrServ) throws IOException {
         ByteArrayOutputStream byteOutOS = new ByteArrayOutputStream();
         int block = 1;
         DatagramPacket dp;
-        byte[] data=createRequest(CODE_RRQ, distFileName, "octet");
+        byte[] data = createRequest(CODE_RRQ, distFileName, "octet");
         this.send(InetAddress.getByName(addrServ), 69, data);
         do {
             System.out.println("TFTP Packet count: " + block);
             block++;
             byte[] bufferByteArray = new byte[PACKET_SIZE];
-            dp= this.get(bufferByteArray);
-            byte[] opCode = { bufferByteArray[0], bufferByteArray[1] };
+            dp = this.get(bufferByteArray);
+            byte[] opCode = {bufferByteArray[0], bufferByteArray[1]};
 
             if (opCode[1] == CODE_ERROR) {
-                receivedError(dp,bufferByteArray);
+                receivedError(dp, bufferByteArray);
             } else if (opCode[1] == CODE_DATAPACKET) {
                 // Check for the TFTP packets block number
-                byte[] blockNumber = { bufferByteArray[2], bufferByteArray[3] };
+                byte[] blockNumber = {bufferByteArray[2], bufferByteArray[3]};
 
                 DataOutputStream dos = new DataOutputStream(byteOutOS);
                 dos.write(dp.getData(), 4, dp.getLength() - 4);
 
                 //STEP 2.2: send ACK to TFTP server for received packet
-                this.send(dp.getAddress(), dp.getPort(),sendAcknowledgment(blockNumber));
+                this.send(dp.getAddress(), dp.getPort(), sendAcknowledgment(blockNumber));
 
                 System.out.println(new String(dp.getData(), StandardCharsets.UTF_8));
             }
 
-        }while(!isLastPacket(dp));
+        } while (!isLastPacket(dp));
 
-        try(OutputStream outputStream = new FileOutputStream(fileName)) {
+        try (OutputStream outputStream = new FileOutputStream(fileName)) {
             byteOutOS.writeTo(outputStream);
         }
 
@@ -137,13 +125,12 @@ public class Client extends EnvoieRecevoir{
     }
 
     /**
-     *
-     * @param opCode TFTP Code
+     * @param opCode   TFTP Code
      * @param fileName File name located in Server
      * @param mode
      * @return
      */
-    private byte[] createRequest(final byte opCode, final String fileName,final String mode) {
+    private byte[] createRequest(final byte opCode, final String fileName, final String mode) {
 
         byte zeroByte = 0;
         int rrqByteLength = 2 + fileName.length() + 1 + mode.length() + 1;
@@ -169,17 +156,15 @@ public class Client extends EnvoieRecevoir{
     }
 
     /**
-     *
      * @param blockNumber get the block number to compose the Acknowledgment message
      * @return
      */
     private byte[] sendAcknowledgment(byte[] blockNumber) {
-        byte[] ACK = { 0, CODE_ACK, blockNumber[0], blockNumber[1] };
+        byte[] ACK = {0, CODE_ACK, blockNumber[0], blockNumber[1]};
         return ACK;
     }
 
     /**
-     *
      * @param datagramPacket datagramPacket that has the information
      * @return
      */
@@ -190,7 +175,7 @@ public class Client extends EnvoieRecevoir{
             return false;
     }
 
-    private void receivedError(DatagramPacket dp,byte[] data ) {
+    private void receivedError(DatagramPacket dp, byte[] data) {
         String errorCode = new String(data, 3, 1);
         String errorText = new String(data, 4, dp.getLength() - 4);
         System.err.println("Error: " + errorCode + " " + errorText);
