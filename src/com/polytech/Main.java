@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -18,6 +19,8 @@ public class Main extends Application {
     }
 
     public void start(Stage primaryStage) {
+        Client monClient = new Client();
+
         // Réglages généraux
         primaryStage.setWidth(400);
         primaryStage.setHeight(300);
@@ -29,41 +32,48 @@ public class Main extends Application {
         grid.setVgap(5);
         grid.setHgap(5);
 
+        // Localfile Label
+        Label labelFichierLocal = new Label("Fichier local : ");
+        GridPane.setConstraints(labelFichierLocal, 0, 0);
+        grid.getChildren().add(labelFichierLocal);
+
         // LocalFile TextField
         final TextField fichierLocal = new TextField();
-        fichierLocal.setPromptText("Entrez le nom du fichier local.");
+        fichierLocal.setPrefWidth(200);
         fichierLocal.setPrefColumnCount(10);
-        GridPane.setConstraints(fichierLocal, 0, 0);
+        GridPane.setConstraints(fichierLocal, 1, 0);
         grid.getChildren().add(fichierLocal);
+
+        // DistantFile Label
+        Label labelFichierDistant = new Label("Fichier distant : ");
+        GridPane.setConstraints(labelFichierDistant, 0, 1);
+        grid.getChildren().add(labelFichierDistant);
 
         // DistanteFile TextField
         final TextField fichierDistant = new TextField();
-        fichierDistant.setPromptText("Entrez le nom du fichier distant.");
-        GridPane.setConstraints(fichierDistant, 0, 1);
+        GridPane.setConstraints(fichierDistant, 1, 1);
         grid.getChildren().add(fichierDistant);
 
         //Defining the Submit button
         Button submit = new Button("Envoyer");
-        GridPane.setConstraints(submit, 0, 5);
+        GridPane.setConstraints(submit, 0, 2);
         grid.getChildren().add(submit);
 
         submit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                Client monClient = new Client();
                 monClient.runClient(fichierLocal.getText(), fichierDistant.getText());
             }
         });
 
         // Defining the Receive button
         Button receive = new Button("Reçevoir");
-        GridPane.setConstraints(receive, 0, 6);
+        GridPane.setConstraints(receive, 0, 3);
         grid.getChildren().add(receive);
 
         receive.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                Client monClient = new Client();
                 monClient.runClient(fichierLocal.getText(), fichierDistant.getText());
             }
         });
