@@ -18,7 +18,7 @@ import java.io.File;
 
 public class Main extends Application {
 
-    private String fichierLocalChooser;
+    private String fichierLocalChooser = "";
 
     public static void main(String[] args) {
         launch(args);
@@ -38,6 +38,13 @@ public class Main extends Application {
         grid.setVgap(5);
         grid.setHgap(5);
 
+        // Label sorties
+        TextArea textAreaSorties = new TextArea();
+        textAreaSorties.setDisable(true);
+        textAreaSorties.setPrefHeight(100);
+        textAreaSorties.setPrefWidth(400);
+        grid.add(textAreaSorties, 0, 7, 7, 3);
+
         /****** ENVOYER *****/
         // Label Envoyer
         Label labelEnvoyer = new Label("ENVOYER UN FICHIER");
@@ -52,20 +59,21 @@ public class Main extends Application {
         // LocalFile TextField
         final FileChooser fileChooser = new FileChooser();
 
-        final Button fichierLocalEnvoyer = new Button("Choisir un fichier");
+        final Button fichierLocalEnvoyerButton = new Button("Choisir un fichier");
 
-        fichierLocalEnvoyer.setOnAction(
+        fichierLocalEnvoyerButton.setOnAction(
                 new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(final ActionEvent e) {
                         File file = fileChooser.showOpenDialog(primaryStage);
                         if (file != null) {
-                            fichierLocalChooser = file.getPath();
+                            fichierLocalChooser = file.getName();
+                            fichierLocalEnvoyerButton.setText(fichierLocalChooser);
                         }
                     }
                 });
-        GridPane.setConstraints(fichierLocalEnvoyer, 1, 1);
-        grid.getChildren().add(fichierLocalEnvoyer);
+        GridPane.setConstraints(fichierLocalEnvoyerButton, 1, 1);
+        grid.getChildren().add(fichierLocalEnvoyerButton);
 
         // DistantFile Label Envoyer
         Label labelFichierDistantEnvoyer = new Label("Fichier distant : ");
@@ -85,7 +93,14 @@ public class Main extends Application {
         submit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                monClient.runClient(fichierLocalChooser, fichierDistant.getText());
+                System.out.println(fichierLocalChooser);
+                if (!fichierLocalChooser.equals("") && !fichierDistant.getText().equals("")) {
+                    monClient.runClient(fichierLocalChooser, fichierDistant.getText());
+                    textAreaSorties.setText("");
+                } else {
+                    textAreaSorties.setText("Les fichiers ne sont pas renseignés");
+                }
+
             }
         });
 
@@ -125,17 +140,14 @@ public class Main extends Application {
         receive.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText());
+                if (!fichierLocalRecevoir.getText().equals("") && !fichierDistantRecevoir.getText().equals("")) {
+                    monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText());
+                    textAreaSorties.setText("");
+                } else {
+                    textAreaSorties.setText("Les fichiers ne sont pas renseignés");
+                }
             }
         });
-
-        // Label sorties
-        TextArea textAreaSorties = new TextArea();
-        textAreaSorties.setDisable(true);
-        textAreaSorties.setPrefHeight(100);
-        textAreaSorties.setPrefWidth(400);
-        grid.add(textAreaSorties, 0, 7, 7, 3);
-
 
         // Groupe des éléments de la scène
         Group group = new Group();
