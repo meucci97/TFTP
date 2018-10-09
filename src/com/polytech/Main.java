@@ -8,11 +8,17 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
+
 public class Main extends Application {
+
+    private String fichierLocalChooser;
 
     public static void main(String[] args) {
         launch(args);
@@ -22,7 +28,7 @@ public class Main extends Application {
         Client monClient = new Client();
 
         // Réglages généraux
-        primaryStage.setWidth(400);
+        primaryStage.setWidth(650);
         primaryStage.setHeight(300);
         primaryStage.setTitle("TFTP");
 
@@ -32,51 +38,104 @@ public class Main extends Application {
         grid.setVgap(5);
         grid.setHgap(5);
 
+        /****** ENVOYER *****/
+        // Label Envoyer
+        Label labelEnvoyer = new Label("ENVOYER UN FICHIER");
+        GridPane.setConstraints(labelEnvoyer, 1, 0);
+        grid.getChildren().add(labelEnvoyer);
+
         // Localfile Label
-        Label labelFichierLocal = new Label("Fichier local : ");
-        GridPane.setConstraints(labelFichierLocal, 0, 0);
-        grid.getChildren().add(labelFichierLocal);
+        Label labelFichierLocalEnvoyer = new Label("Fichier local : ");
+        GridPane.setConstraints(labelFichierLocalEnvoyer, 0, 1);
+        grid.getChildren().add(labelFichierLocalEnvoyer);
 
         // LocalFile TextField
-        final TextField fichierLocal = new TextField();
-        fichierLocal.setPrefWidth(200);
-        fichierLocal.setPrefColumnCount(10);
-        GridPane.setConstraints(fichierLocal, 1, 0);
-        grid.getChildren().add(fichierLocal);
+        final FileChooser fileChooser = new FileChooser();
 
-        // DistantFile Label
-        Label labelFichierDistant = new Label("Fichier distant : ");
-        GridPane.setConstraints(labelFichierDistant, 0, 1);
-        grid.getChildren().add(labelFichierDistant);
+        final Button fichierLocalEnvoyer = new Button("Choisir un fichier");
 
-        // DistanteFile TextField
+        fichierLocalEnvoyer.setOnAction(
+                new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(final ActionEvent e) {
+                        File file = fileChooser.showOpenDialog(primaryStage);
+                        if (file != null) {
+                            fichierLocalChooser = file.getPath();
+                        }
+                    }
+                });
+        GridPane.setConstraints(fichierLocalEnvoyer, 1, 1);
+        grid.getChildren().add(fichierLocalEnvoyer);
+
+        // DistantFile Label Envoyer
+        Label labelFichierDistantEnvoyer = new Label("Fichier distant : ");
+        GridPane.setConstraints(labelFichierDistantEnvoyer, 0, 2);
+        grid.getChildren().add(labelFichierDistantEnvoyer);
+
+        // DistanteFile TextField Envoyer
         final TextField fichierDistant = new TextField();
-        GridPane.setConstraints(fichierDistant, 1, 1);
+        GridPane.setConstraints(fichierDistant, 1, 2);
         grid.getChildren().add(fichierDistant);
 
         //Defining the Submit button
         Button submit = new Button("Envoyer");
-        GridPane.setConstraints(submit, 0, 2);
+        GridPane.setConstraints(submit, 1, 3);
         grid.getChildren().add(submit);
 
         submit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                monClient.runClient(fichierLocal.getText(), fichierDistant.getText());
+                monClient.runClient(fichierLocalChooser, fichierDistant.getText());
             }
         });
 
+        /***RECEVOIR***/
+        // Label Recevoir
+        Label labelRecevoir = new Label("RECEVOIR UN FICHIER");
+        GridPane.setConstraints(labelRecevoir, 6, 0);
+        grid.getChildren().add(labelRecevoir);
+
+        // Localfile Label Recevoir
+        Label labelFichierLocalRecevoir = new Label("Fichier local : ");
+        GridPane.setConstraints(labelFichierLocalRecevoir, 5, 1);
+        grid.getChildren().add(labelFichierLocalRecevoir);
+
+        // LocalFile TextField Recevoir
+        final TextField fichierLocalRecevoir = new TextField();
+        fichierLocalRecevoir.setPrefWidth(200);
+        fichierLocalRecevoir.setPrefColumnCount(10);
+        GridPane.setConstraints(fichierLocalRecevoir, 6, 1);
+        grid.getChildren().add(fichierLocalRecevoir);
+
+        // DistantFile Label Recevoir
+        Label labelFichierDistantRecevoir = new Label("Fichier distant : ");
+        GridPane.setConstraints(labelFichierDistantRecevoir, 5, 2);
+        grid.getChildren().add(labelFichierDistantRecevoir);
+
+        // DistanteFile TextField Recevoir
+        final TextField fichierDistantRecevoir = new TextField();
+        GridPane.setConstraints(fichierDistantRecevoir, 6, 2);
+        grid.getChildren().add(fichierDistantRecevoir);
+
         // Defining the Receive button
         Button receive = new Button("Reçevoir");
-        GridPane.setConstraints(receive, 0, 3);
+        GridPane.setConstraints(receive, 6, 3);
         grid.getChildren().add(receive);
 
         receive.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                monClient.runClient(fichierLocal.getText(), fichierDistant.getText());
+                monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText());
             }
         });
+
+        // Label sorties
+        TextArea textAreaSorties = new TextArea();
+        textAreaSorties.setDisable(true);
+        textAreaSorties.setPrefHeight(100);
+        textAreaSorties.setPrefWidth(400);
+        grid.add(textAreaSorties, 0, 7, 7, 3);
+
 
         // Groupe des éléments de la scène
         Group group = new Group();
