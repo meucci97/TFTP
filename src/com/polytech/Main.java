@@ -95,8 +95,8 @@ public class Main extends Application {
             public void handle(ActionEvent event) {
                 System.out.println(fichierLocalChooser);
                 if (!fichierLocalChooser.equals("") && !fichierDistant.getText().equals("")) {
-                    monClient.runClient(fichierLocalChooser, fichierDistant.getText());
-                    textAreaSorties.setText("");
+
+                    textAreaSorties.setText( monClient.runClient(fichierLocalChooser, fichierDistant.getText(),false));
                 } else {
                     textAreaSorties.setText("Les fichiers ne sont pas renseignés");
                 }
@@ -141,8 +141,7 @@ public class Main extends Application {
             @Override
             public void handle(ActionEvent event) {
                 if (!fichierLocalRecevoir.getText().equals("") && !fichierDistantRecevoir.getText().equals("")) {
-                    monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText());
-                    textAreaSorties.setText("");
+                    textAreaSorties.setText(monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText(),true));
                 } else {
                     textAreaSorties.setText("Les fichiers ne sont pas renseignés");
                 }

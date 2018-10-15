@@ -1,10 +1,12 @@
 package com.polytech;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,39 +32,19 @@ public class EnvoieRecevoir {
         }
     }
 
-    public DatagramPacket get(byte[] buffer) {
+    public DatagramPacket get(byte[] buffer) throws Exception {
 
         DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-        try {
-            mySocket.receive(dp);
-            String tmp = new String(dp.getData(), "ascii");
-            byte[] data = tmp.getBytes("ascii");
-            DatagramPacket returnDp = new DatagramPacket(data, data.length, dp.getAddress(), dp.getPort());
-            return dp;
 
-        } catch (IOException ex) {
-            Logger.getLogger(EnvoieRecevoir.class.getName()).log(Level.SEVERE, null, ex);
-            return dp;
-        }
+        mySocket.setSoTimeout(5000);
+        mySocket.receive(dp);
+        String tmp = new String(dp.getData(), "ascii");
+        byte[] data = tmp.getBytes("ascii");
+        DatagramPacket returnDp = new DatagramPacket(data, data.length, dp.getAddress(), dp.getPort());
+        return dp;
+
+
     }
-
-    /*
-    public DatagramPacket getFirstConnection(InetAddress inetAddress, int port, String data) {
-        byte[] buffer = new byte[512];
-        DatagramPacket dp = new DatagramPacket(buffer, 512);
-        try {
-
-            dp = new DatagramPacket(tmp, tmp.length, inetAddress, port);
-            mySocket.send(dp);
-            dp = this.get();
-            System.out.println(dp);
-            return dp;
-        } catch (IOException ex) {
-            Logger.getLogger(EnvoieRecevoir.class.getName()).log(Level.SEVERE, null, ex);
-            return dp;
-        }
-    }
-    */
 
 
     public void closeSocket(int socket) {

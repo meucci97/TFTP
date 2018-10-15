@@ -1,10 +1,12 @@
 package com.polytech;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Vector;
 
@@ -15,54 +17,37 @@ public class Client extends EnvoieRecevoir {
     private int ECOUTE;
 
     private static final byte CODE_RRQ = 1;
+    private static final byte CODE_WRQ = 2;
     private static final byte CODE_DATAPACKET = 3;
     private static final byte CODE_ACK = 4;
     private static final byte CODE_ERROR = 5;
 
     private final static int PACKET_SIZE = 516;
+    private final static int SEND_DATA_PACKET_SIZE = 512;
 
     /**
      * Initialize client to send or receive Data
      */
-    public void runClient(String local, String distant) {
-
+    public String runClient(String local, String distant, boolean  receive) {
+        String messageRetour="";
         myPort = getAvailablePorts(4001, 5000);
         ECOUTE = myPort.firstElement();
         System.out.println("Mon port d'écoute: " + ECOUTE);
         initSocket(ECOUTE);
 
         try {
-            receiveFile(local, distant, IP);
+            if(receive){
+                messageRetour=receiveFile(local, distant, IP);
+            }else{
+                messageRetour=sendFile(local,distant,IP);
+            }
+
         } catch (IOException e) {
+            messageRetour="Une erreur est survenue";
             e.printStackTrace();
         }
         closeSocket(ECOUTE);
-
-/*
-            boolean follow = true;
-        try {
-            System.out.println("Request sent");
-
-            message = new String(dp.getData(), StandardCharsets.UTF_8);
-            System.out.println("Réponse du serveur au Request: "+message);
-            while (follow) {
-                System.out.print("Message à envoyer: ");
-                message = sc.nextLine();
-
-                send(dp.getAddress(), dp.getPort(), message);
-                dp =this.get();
-                if (message.equalsIgnoreCase("end")) {
-                    follow = false;
-                }
-                message=new String(dp.getData(), StandardCharsets.UTF_8);
-                System.out.println("Réponse du serveur: " + message);
-                message = message.trim();
-
-            }
-            closeSocket(ECOUTE);
-        } catch (Exception ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }*/
+        return messageRetour;
     }
 
     private static Vector getAvailablePorts(int start, int end) {
@@ -74,7 +59,7 @@ public class Client extends EnvoieRecevoir {
                 v.add(i);
                 d.close();
             } catch (SocketException se) {
-                //  System.out.println("Port Bloquer:" + i);
+                //System.out.println("Port Bloquer:" + i);
             }
         }
         return v;
@@ -87,43 +72,87 @@ public class Client extends EnvoieRecevoir {
      * @return
      * @throws IOException
      */
-    public int receiveFile(String fileName, String distFileName, String addrServ) throws IOException {
+    public String receiveFile(String fileName, String distFileName, String addrServ) throws IOException {
         ByteArrayOutputStream byteOutOS = new ByteArrayOutputStream();
-        int block = 1;
-        DatagramPacket dp;
+
+        int block = -1;
+        DatagramPacket dp =null;
         byte[] data = createRequest(CODE_RRQ, distFileName, "octet");
         this.send(InetAddress.getByName(addrServ), 69, data);
         do {
-            System.out.println("TFTP Packet count: " + block);
-            block++;
-            byte[] bufferByteArray = new byte[PACKET_SIZE];
-            dp = this.get(bufferByteArray);
-            byte[] opCode = {bufferByteArray[0], bufferByteArray[1]};
 
-            if (opCode[1] == CODE_ERROR) {
-                receivedError(dp, bufferByteArray);
-            } else if (opCode[1] == CODE_DATAPACKET) {
-                // Check for the TFTP packets block number
-                byte[] blockNumber = {bufferByteArray[2], bufferByteArray[3]};
+            try{
+                System.out.println("TFTP Packet count: " + block);
+                block++;
+                byte[] bufferByteArray = new byte[PACKET_SIZE];
+                dp = this.get(bufferByteArray);
+                byte[] opCode = {bufferByteArray[0], bufferByteArray[1]};
 
-                DataOutputStream dos = new DataOutputStream(byteOutOS);
-                dos.write(dp.getData(), 4, dp.getLength() - 4);
+                if (opCode[1] == CODE_ERROR) {
+                    return receivedError(dp, bufferByteArray);
+                } else if (opCode[1] == CODE_DATAPACKET) {
+                    // Check for the TFTP packets block number
+                    byte[] blockNumber = {bufferByteArray[2], bufferByteArray[3]};
 
-                //STEP 2.2: send ACK to TFTP server for received packet
-                this.send(dp.getAddress(), dp.getPort(), sendAcknowledgment(blockNumber));
+                    DataOutputStream dos = new DataOutputStream(byteOutOS);
+                    dos.write(dp.getData(), 4, dp.getLength() - 4);
 
-                System.out.println(new String(dp.getData(), StandardCharsets.UTF_8));
+                    //STEP 2.2: send ACK to TFTP server for received packet
+                    this.send(dp.getAddress(), dp.getPort(), sendAcknowledgment(blockNumber));
+
+                }
+            }catch (Exception e){
+                return "ERROR 0 - TIMEOUT";
             }
-
-        } while (!isLastPacket(dp));
+        } while (!isLastPacket(dp)|| dp ==null );
 
         try (OutputStream outputStream = new FileOutputStream(fileName)) {
             byteOutOS.writeTo(outputStream);
         }
 
-        return 0;
+        return "Reçu";
     }
 
+
+    public String sendFile(String fileName, String distFileName, String addrServ) throws IOException {
+        ByteArrayOutputStream byteOutOS = new ByteArrayOutputStream();
+        int block = 0;
+        DatagramPacket dp;
+        FileInputStream inputStream = new FileInputStream(fileName); //creation du reader
+        byte [] byteDataArray= new byte[SEND_DATA_PACKET_SIZE];
+        byte[] data = createRequest(CODE_WRQ, distFileName, "octet");
+        this.send(InetAddress.getByName(addrServ), 69, data);
+
+            while (inputStream.read(byteDataArray,0,512)!=-1) {
+                try{
+                    System.out.println("TFTP Packet count: " + block);
+
+                    byte[] bufferByteArray = new byte[PACKET_SIZE];
+                    dp = this.get(bufferByteArray);
+                    byte[] opCode = {bufferByteArray[0], bufferByteArray[1]};
+
+                    if (opCode[1] == CODE_ERROR) {
+                        inputStream.close();
+                        return receivedError(dp, bufferByteArray);
+                    } else if (opCode[1] == CODE_ACK) {
+                        block++;
+                        // Check for the TFTP packets block number
+                        byte[] blockNumber = {bufferByteArray[2], bufferByteArray[3]};
+
+                        //STEP 2.2: send ACK to TFTP server for received packet
+
+                        this.send(dp.getAddress(), dp.getPort(), sendData(blockNumber,byteDataArray, block));
+                        byteDataArray= new byte[SEND_DATA_PACKET_SIZE];
+                    }
+                }catch (Exception e){
+                    inputStream.close();
+                    return "ERROR 0 - TIMEOUT";
+                }
+            }
+
+        inputStream.close();
+        return "Envoie réaliser avec succès";
+    }
     /**
      * @param opCode   TFTP Code
      * @param fileName File name located in Server
@@ -164,6 +193,23 @@ public class Client extends EnvoieRecevoir {
         return ACK;
     }
 
+
+    public ByteArrayInputStream readFile(String fileName){
+        try{
+            FileInputStream inputStream = new FileInputStream(fileName); //creation du reader
+            DataInputStream dis = new DataInputStream(inputStream); //stream de byte à lire
+            byte[] buff = new byte[inputStream.available()]; //lecture de tous les bytes du stream
+
+            dis.read(buff);
+
+            ByteArrayInputStream fileData = new ByteArrayInputStream(buff);  //creation du byte array qui contiendra la donnée du fichier
+
+            return fileData;
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
     /**
      * @param datagramPacket datagramPacket that has the information
      * @return
@@ -175,10 +221,25 @@ public class Client extends EnvoieRecevoir {
             return false;
     }
 
-    private void receivedError(DatagramPacket dp, byte[] data) {
+    private String receivedError(DatagramPacket dp, byte[] data) {
         String errorCode = new String(data, 3, 1);
         String errorText = new String(data, 4, dp.getLength() - 4);
-        System.err.println("Error: " + errorCode + " " + errorText);
+        String error="Error: " + errorCode + " " + errorText;
+        System.err.println(error);
+        return error;
     }
 
+    private byte [] sendData (byte [] blockNumber, byte [] fileData, int block_id){
+
+
+        byte[] DATA = {0, CODE_DATAPACKET, 0, (byte)block_id};
+        String collectedData =new String(fileData, StandardCharsets.UTF_8);
+        byte[] transformedData = collectedData.getBytes();
+
+        byte[] c = new byte[DATA.length + transformedData.length];
+        System.arraycopy(DATA, 0, c, 0, DATA.length);
+        System.arraycopy(transformedData, 0, c, DATA.length, transformedData.length);
+        System.out.println(transformedData.length);
+        return c;
+    }
 }
