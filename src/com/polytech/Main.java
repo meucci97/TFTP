@@ -20,6 +20,7 @@ public class Main extends Application {
 
     private String fichierLocalChooser = "";
 
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -106,7 +107,7 @@ public class Main extends Application {
                 System.out.println(fichierLocalChooser);
                 if (!fichierLocalChooser.equals("") && !fichierDistant.getText().equals("")) {
 
-                    textAreaSorties.setText( monClient.runClient(fichierLocalChooser, fichierDistant.getText(),false));
+                    textAreaSorties.setText( monClient.runClient(fichierLocalChooser, fichierDistant.getText(),adresseIP.getText(),false));
                 } else {
                     textAreaSorties.setText("Les fichiers ne sont pas renseignés");
                 }
@@ -151,7 +152,7 @@ public class Main extends Application {
             @Override
             public void handle(ActionEvent event) {
                 if (!fichierLocalRecevoir.getText().equals("") && !fichierDistantRecevoir.getText().equals("")) {
-                    textAreaSorties.setText(monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText(),true));
+                    textAreaSorties.setText(monClient.runClient(fichierLocalRecevoir.getText(), fichierDistantRecevoir.getText(),adresseIP.getText(),true));
                 } else {
                     textAreaSorties.setText("Les fichiers ne sont pas renseignés");
                 }

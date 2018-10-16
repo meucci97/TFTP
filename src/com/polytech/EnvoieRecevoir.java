@@ -36,7 +36,7 @@ public class EnvoieRecevoir {
 
         DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
-        mySocket.setSoTimeout(5000);
+        mySocket.setSoTimeout(10000);
         mySocket.receive(dp);
         String tmp = new String(dp.getData(), "ascii");
         byte[] data = tmp.getBytes("ascii");

@@ -12,7 +12,7 @@ import java.util.Vector;
 
 public class Client extends EnvoieRecevoir {
 
-    private static final String IP = "127.0.0.1";
+    private static final String IP_Def = "127.0.0.1";
     private Vector<Integer> myPort;
     private int ECOUTE;
 
@@ -28,7 +28,10 @@ public class Client extends EnvoieRecevoir {
     /**
      * Initialize client to send or receive Data
      */
-    public String runClient(String local, String distant, boolean  receive) {
+    public String runClient(String local, String distant, String IP, boolean  receive) {
+        if(IP.isEmpty()){
+            IP=IP_Def;
+        }
         String messageRetour="";
         myPort = getAvailablePorts(4001, 5000);
         ECOUTE = myPort.firstElement();
@@ -118,16 +121,19 @@ public class Client extends EnvoieRecevoir {
         ByteArrayOutputStream byteOutOS = new ByteArrayOutputStream();
         int block = 0;
         DatagramPacket dp;
+
         FileInputStream inputStream = new FileInputStream(fileName); //creation du reader
         byte [] byteDataArray= new byte[SEND_DATA_PACKET_SIZE];
         byte[] data = createRequest(CODE_WRQ, distFileName, "octet");
+        int remainingByte=inputStream.available();
+        int readLength=512;
         this.send(InetAddress.getByName(addrServ), 69, data);
 
-            while (inputStream.read(byteDataArray,0,512)!=-1) {
+            while (inputStream.read(byteDataArray,0,readLength)!=-1) {
                 try{
                     System.out.println("TFTP Packet count: " + block);
-
-                    byte[] bufferByteArray = new byte[PACKET_SIZE];
+                    System.out.println(inputStream.available());
+                    byte[] bufferByteArray = new byte[SEND_DATA_PACKET_SIZE];
                     dp = this.get(bufferByteArray);
                     byte[] opCode = {bufferByteArray[0], bufferByteArray[1]};
 
@@ -142,7 +148,14 @@ public class Client extends EnvoieRecevoir {
                         //STEP 2.2: send ACK to TFTP server for received packet
 
                         this.send(dp.getAddress(), dp.getPort(), sendData(blockNumber,byteDataArray, block));
-                        byteDataArray= new byte[SEND_DATA_PACKET_SIZE];
+                        remainingByte=inputStream.available()+1;
+                        if(remainingByte>SEND_DATA_PACKET_SIZE){
+                            byteDataArray= new byte[SEND_DATA_PACKET_SIZE];
+                        }else{
+                            byteDataArray= new byte[remainingByte];
+                            readLength=remainingByte;
+                        }
+
                     }
                 }catch (Exception e){
                     inputStream.close();
@@ -233,13 +246,12 @@ public class Client extends EnvoieRecevoir {
 
 
         byte[] DATA = {0, CODE_DATAPACKET, 0, (byte)block_id};
-        String collectedData =new String(fileData, StandardCharsets.UTF_8);
-        byte[] transformedData = collectedData.getBytes();
 
-        byte[] c = new byte[DATA.length + transformedData.length];
+
+        byte[] c = new byte[DATA.length + fileData.length];
         System.arraycopy(DATA, 0, c, 0, DATA.length);
-        System.arraycopy(transformedData, 0, c, DATA.length, transformedData.length);
-        System.out.println(transformedData.length);
+        System.arraycopy(fileData, 0, c, DATA.length, fileData.length);
+        System.out.println(fileData.length);
         return c;
     }
 }
