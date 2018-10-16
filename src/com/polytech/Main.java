@@ -46,6 +46,16 @@ public class Main extends Application {
         grid.add(textAreaSorties, 0, 7, 7, 3);
 
         /****** ENVOYER *****/
+        // Adresse IP Label
+        Label labelAdresseIP = new Label("Adresse IP : ");
+        GridPane.setConstraints(labelAdresseIP, 0, 10);
+        grid.getChildren().add(labelAdresseIP);
+
+        // Adresse IP TextField Envoyer
+        final TextField adresseIP = new TextField();
+        GridPane.setConstraints(adresseIP, 1, 10);
+        grid.getChildren().add(adresseIP);
+
         // Label Envoyer
         Label labelEnvoyer = new Label("ENVOYER UN FICHIER");
         GridPane.setConstraints(labelEnvoyer, 1, 0);
