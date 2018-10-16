@@ -164,7 +164,7 @@ public class Client extends EnvoieRecevoir {
             }
 
         inputStream.close();
-        return "Envoie réaliser avec succès";
+        return "Envoi réalisé avec succès";
     }
     /**
      * @param opCode   TFTP Code
